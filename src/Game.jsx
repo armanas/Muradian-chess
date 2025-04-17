@@ -92,11 +92,19 @@ function Game({ user }) {
   };
 
   const createNewGame = async () => {
-    if (!user) return;
+    if (!user) {
+      setError('You must be logged in to create a game');
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
 
     try {
+      // Get the user's current ID token to ensure it's fresh
+      const token = await user.getIdToken(true);
+      console.log('Auth token refreshed:', token.substring(0, 10) + '...');
+      
       const newGameId = `game_${nanoid(8)}`;
       const newChess = new Chess(); // Create fresh game
       
@@ -111,7 +119,9 @@ function Game({ user }) {
         status: 'waiting',
         moveHistory: [],
         createdAt: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        // Add creator reference for security rules
+        createdBy: user.uid
       };
 
       // Create the game document in Firestore
@@ -129,7 +139,11 @@ function Game({ user }) {
       setPosition(newChess.fen());
     } catch (error) {
       console.error('Error creating game:', error);
-      setError(`Failed to create game: ${error.message}`);
+      if (error.code === 'permission-denied') {
+        setError('Failed to create game: Missing or insufficient permissions. Please try logging out and back in.');
+      } else {
+        setError(`Failed to create game: ${error.message}`);
+      }
     } finally {
       setIsLoading(false);
     }

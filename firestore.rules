@@ -1,16 +1,26 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Relaxed rules for development/testing
+    // Improved rules for game access
     match /games/{gameId} {
-      // Allow read for authenticated users and for joining games
-      allow read: if request.auth != null || true;
+      // Allow read access to authenticated users and for game browsing
+      allow read: if request.auth != null;
       
-      // Allow create for authenticated users
-      allow create: if request.auth != null;
+      // Allow creating games when authenticated and setting yourself as the creator
+      allow create: if request.auth != null &&
+                     request.resource.data.playerWhite == request.auth.uid &&
+                     request.resource.data.createdBy == request.auth.uid;
       
-      // Allow updates with more relaxed conditions
-      allow update: if request.auth != null;
+      // Allow updates with more specific conditions
+      allow update: if request.auth != null && (
+        // Player can update if they are one of the players
+        resource.data.playerWhite == request.auth.uid ||
+        resource.data.playerBlack == request.auth.uid ||
+        
+        // Allow joining as black player if position is open
+        (resource.data.playerBlack == null && 
+         request.resource.data.playerBlack == request.auth.uid)
+      );
       
       // No deleting games
       allow delete: if false;
