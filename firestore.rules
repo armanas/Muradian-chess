@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow any authenticated user to read their own games
+    match /games/{gameId} {
+      // Allow read if user is either player
+      allow read: if request.auth != null && 
+        (resource.data.playerWhite == request.auth.uid || 
+         resource.data.playerBlack == request.auth.uid || 
+         resource.data.playerBlack == null); // Also allow if black slot is open (for joining)
+      
+      // Allow create for authenticated users
+      allow create: if request.auth != null && 
+        request.resource.data.playerWhite == request.auth.uid && 
+        request.resource.data.playerBlack == null;
+      
+      // Allow updates with specific conditions
+      allow update: if request.auth != null && (
+        // White player can update if it's their turn
+        (resource.data.playerWhite == request.auth.uid && 
+         resource.data.turn == 'w') ||
+        
+        // Black player can update if it's their turn
+        (resource.data.playerBlack == request.auth.uid && 
+         resource.data.turn == 'b') ||
+        
+        // A user can join as black if the slot is empty
+        (resource.data.playerBlack == null && 
+         request.resource.data.playerBlack == request.auth.uid && 
+         request.resource.data.playerWhite == resource.data.playerWhite && 
+         request.resource.data.fen == resource.data.fen && 
+         request.auth.uid != resource.data.playerWhite)
+      );
+      
+      // No deleting games
+      allow delete: if false;
+    }
+  }
+}
