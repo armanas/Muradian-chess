@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { db } from './firebase';
-import { doc, onSnapshot, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { nanoid } from 'nanoid';
 import './Game.css';
 
@@ -142,7 +142,7 @@ function Game({ user }) {
 
     try {
       const gameRef = doc(db, 'games', gameId);
-      const gameSnapshot = await doc(db, 'games', gameId).get();
+      const gameSnapshot = await getDoc(gameRef);
       
       if (!gameSnapshot.exists()) {
         setError('Game not found');

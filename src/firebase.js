@@ -61,6 +61,8 @@ const getAuthErrorMessage = (error) => {
       return 'Login canceled. Please try again.';
     case 'auth/network-request-failed':
       return 'Network error. Please check your internet connection.';
+    case 'auth/operation-not-allowed':
+      return 'This authentication method is not enabled. Please contact the administrator.';
     default:
       return `Authentication error: ${error.message}`;
   }
