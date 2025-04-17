@@ -1,5 +1,15 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { 
+  getAuth, 
+  GoogleAuthProvider, 
+  setPersistence, 
+  browserLocalPersistence, 
+  signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
@@ -32,6 +42,40 @@ googleProvider.setCustomParameters({
   prompt: 'select_account' // Forces account selection even when one account is available
 });
 
+// Helper function to handle Firebase auth errors with user-friendly messages
+const getAuthErrorMessage = (error) => {
+  const errorCode = error.code;
+  switch (errorCode) {
+    case 'auth/email-already-in-use':
+      return 'This email is already registered. Try logging in instead.';
+    case 'auth/invalid-email':
+      return 'Please provide a valid email address.';
+    case 'auth/weak-password':
+      return 'Password should be at least 6 characters.';
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'Invalid email or password. Please try again.';
+    case 'auth/too-many-requests':
+      return 'Too many unsuccessful login attempts. Try again later or reset your password.';
+    case 'auth/popup-closed-by-user':
+      return 'Login canceled. Please try again.';
+    case 'auth/network-request-failed':
+      return 'Network error. Please check your internet connection.';
+    default:
+      return `Authentication error: ${error.message}`;
+  }
+};
+
 const db = getFirestore(app);
 
-export { auth, db, googleProvider };
+export { 
+  auth, 
+  db, 
+  googleProvider, 
+  signInAnonymously, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  sendPasswordResetEmail,
+  updateProfile,
+  getAuthErrorMessage 
+};
